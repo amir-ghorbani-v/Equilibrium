@@ -1,0 +1,259 @@
+
+# ---------- Initialize Simulation ---------------------
+clear
+OMP_NUM_THREADS environment is not set. Defaulting to 1 thread. (src/comm.cpp:98)
+  using 1 OpenMP thread(s) per MPI task
+Loaded 0 plugins from C:\Users\19ag40\AppData\Local\LAMMPS 64-bit 7Feb2024-MSMPI with Python\plugins
+Loaded 1 plugins from C:\Users\19ag40\AppData\Local\LAMMPS 64-bit 2Aug2023 with Python\plugins
+units metal
+dimension 3
+boundary p p p
+atom_style atomic
+atom_modify map array
+
+# ---------- Create Atoms ---------------------
+atom_style full
+lattice         custom 3.234				a1 1.0016035332910205 0.0 0.0			a2 0.0 1.7348281644198345 0.0			a3 0.0 0.0 1.6004477267115904			basis 0.0 0.0 0.0			basis 0.5 0.5 0.0			basis 0.5 0.1667 0.5			basis 0.0 0.6667 0.5
+Lattice spacing in x,y,z = 3.2391858 5.6104343 5.1758479
+region		box block 0 10  0 8  0 8
+create_box	1 box
+Created orthogonal box = (0 0 0) to (32.391858 44.883474 41.406784)
+  1 by 1 by 1 MPI processor grid
+create_atoms	1 region box
+Created 2560 atoms
+  using lattice units in orthogonal box = (0 0 0) to (32.391858 44.883474 41.406784)
+  create_atoms CPU = 0.000 seconds
+
+replicate 1 1 1
+Replication is creating a 1x1x1 = 1 times larger system...
+  orthogonal box = (0 0 0) to (32.391858 44.883474 41.406784)
+  1 by 1 by 1 MPI processor grid
+  2560 atoms
+Finding 1-2 1-3 1-4 neighbors ...
+  special bond factors lj:    0        0        0       
+  special bond factors coul:  0        0        0       
+     0 = max # of 1-2 neighbors
+     0 = max # of 1-3 neighbors
+     0 = max # of 1-4 neighbors
+     1 = max # of special neighbors
+  special bonds CPU = 0.000 seconds
+  replicate CPU = 0.001 seconds
+
+# ---------- Define Interatomic Potential ---------------------
+pair_style eam/alloy
+pair_coeff * * D:\Queens_University\Project\Zr\PotentialBank\Eam\M3.eampot Zr
+neighbor 2.0 bin
+neigh_modify delay 10 check yes
+
+# ---------- Define Settings ---------------------
+compute eng all pe/atom
+compute eatoms all reduce sum c_eng
+
+# ---------- Run Minimization ---------------------
+reset_timestep 0
+fix 1 all box/relax iso 0.0 vmax 0.001
+#dump 1 all custom 1 *.dump id type x y z c_eng
+thermo 1
+thermo_style custom step pe lx ly lz press pxx pyy pzz c_eatoms
+min_style cg
+minimize 1e-15 1e-15 100000 100000 # 1e-50 1e-50 1000000 1000000
+Switching to 'neigh_modify every 1 delay 0 check yes' setting during minimization
+Neighbor list info ...
+  update: every = 1 steps, delay = 0 steps, check = yes
+  max neighbors/atom: 2000, page size: 100000
+  master list distance cutoff = 9.6
+  ghost atom cutoff = 9.6
+  binsize = 4.8, bins = 7 10 9
+  1 neighbor lists, perpetual/occasional/extra = 1 0 0
+  (1) pair eam/alloy, perpetual
+      attributes: half, newton on
+      pair build: half/bin/newton
+      stencil: half/bin/3d
+      bin: standard
+WARNING: Energy due to 1 extra global DOFs will be included in minimizer energies
+ (src/min.cpp:225)
+Per MPI rank memory allocation (min/avg/max) = 8.242 | 8.242 | 8.242 Mbytes
+   Step         PotEng           Lx             Ly             Lz           Press           Pxx            Pyy            Pzz          c_eatoms   
+         0  -16984.433      32.391858      44.883474      41.406784     -4746.3674     -4624.4309     -4606.2653     -5008.4061     -16984.433    
+         1  -16984.798      32.359466      44.838591      41.365377     -1746.0304     -1705.2942     -1687.2565     -1845.5405     -16984.798    
+         2  -16984.856      32.340535      44.812358      41.341176      1.7339477     -7.3064651      10.655495      1.8528129     -16984.856    
+         3  -16984.856      32.340483      44.812287      41.341111      6.4572675     -2.5342651      15.055855      6.8502126     -16984.856    
+         4  -16984.856      32.340553      44.812384      41.3412        0.00094612627 -8.8025753      8.7863155      0.019098141   -16984.856    
+         5  -16984.856      32.340667      44.812542      41.341346     -10.512133     -18.274997     -2.156803      -11.1046       -16984.856    
+         6  -16984.856      32.340552      44.812382      41.341198      0.17629939     0.24862813     0.078353241    0.20191681    -16984.856    
+         7  -16984.856      32.340552      44.812382      41.341198      0.12933878     0.20637825     0.029407781    0.15223031    -16984.856    
+         8  -16984.856      32.340554      44.812384      41.3412        0.00039162549  0.08117287    -0.095796189    0.015798196   -16984.856    
+         9  -16984.856      32.340554      44.812384      41.3412       -0.0033820409   0.077501679   -0.099453282    0.011805481   -16984.856    
+        10  -16984.856      32.340553      44.812384      41.3412        0.0046782215  -0.011713108    0.0054144958   0.020333277   -16984.856    
+        11  -16984.856      32.340554      44.812384      41.3412        6.7474223e-06 -0.016269802    0.00089940463  0.015390639   -16984.856    
+        12  -16984.856      32.340554      44.812384      41.3412        6.7474223e-06 -0.016269802    0.00089940463  0.015390639   -16984.856    
+Loop time of 0.133964 on 1 procs for 12 steps with 2560 atoms
+
+105.0% CPU use with 1 MPI tasks x 1 OpenMP threads
+
+Minimization stats:
+  Stopping criterion = linesearch alpha is zero
+  Energy initial, next-to-last, final = 
+     -16984.4327656088  -16984.8555398113  -16984.8555398113
+  Force two-norm initial, final = 535.01515 7.581695e-07
+  Force max component initial, final = 535.01515 7.5816858e-07
+  Final line search alpha, max atom move = 0.5 3.7908429e-07
+  Iterations, force evaluations = 12 24
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 0.12942    | 0.12942    | 0.12942    |   0.0 | 96.61
+Bond    | 5e-06      | 5e-06      | 5e-06      |   0.0 |  0.00
+Neigh   | 0          | 0          | 0          |   0.0 |  0.00
+Comm    | 0.000573   | 0.000573   | 0.000573   |   0.0 |  0.43
+Output  | 0.000631   | 0.000631   | 0.000631   |   0.0 |  0.47
+Modify  | 0          | 0          | 0          |   0.0 |  0.00
+Other   |            | 0.003338   |            |       |  2.49
+
+Nlocal:           2560 ave        2560 max        2560 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Nghost:           5639 ave        5639 max        5639 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Neighs:         186880 ave      186880 max      186880 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 186880
+Ave neighs/atom = 73
+Ave special neighs/atom = 0
+Neighbor list builds = 0
+Dangerous builds = 0
+
+#------------------------------Dump-------------------------
+write_dump all custom D:\Queens_University\Project\Zr\Equilibrium\Mapping/M3/Final.dump id type x y z vx vy vz c_eng
+write_restart D:\Queens_University\Project\Zr\Equilibrium\Mapping/M3/Final.restart
+System init for write_restart ...
+
+#------------------------------Restor-------------------------
+unfix 1
+
+# ---------- Calculate Distance ---------------------
+# Calculate the distance between atoms with ID 1 and ID 5
+#group atom1 id 0
+#group atom5 id 4
+#compute dist1 atom1 property/atom x y z
+#compute dist5 atom5 property/atom x y z
+#compute 1 all property/local patom1 patom2
+#compute 2 all pair/local dist eng force
+#dump 1 all local 1 tmp.dump index c_1[1] c_1[2] c_2[1] c_2[2] c_2[3]
+#variable dist equal sqrt((c_dist1[1]-c_dist5[1])^2+(c_dist1[2]-c_dist5[2])^2+(c_dist1[3]-c_dist5[3])^2)
+#print "${dist}"
+
+variable AX equal x[8]
+variable AY equal y[8]
+variable AZ equal z[8]
+
+variable BX equal x[12]
+variable BY equal y[12]
+variable BZ equal z[12]
+
+variable dist equal sqrt((v_AX-v_BX)^2+(v_AY-v_BY)^2+(v_AZ-v_BZ)^2)
+
+#------------------------------Info Record-------------------------
+variable N equal count(all)
+variable No equal $N
+variable No equal 2560
+
+variable E equal "c_eatoms"
+variable Eo equal $E
+variable Eo equal -16984.8555397573
+
+variable PXX equal pxx
+variable PXXo equal v_PXX
+
+variable PYY equal pyy
+variable PYYo equal v_PYY
+
+variable PZZ equal pzz
+variable PZZo equal v_PZZ
+
+#print "Pxx = ${PXX}"
+#print "Pyy = ${PYY}"
+#print "Pzz = ${PZZ}"
+
+variable natoms equal count(all)
+variable teng equal c_eatoms
+variable length equal lx
+variable ecoh equal v_teng/v_natoms
+
+print "Total energy (eV) = ${teng}"
+Total energy (eV) = -16984.8555397573
+print "Number of atoms = ${natoms}"
+Number of atoms = 2560
+print "Lattice constant (Angstoms) = ${dist}"
+Lattice constant (Angstoms) = 3.23405535110207
+print "Cohesive energy (eV) = ${ecoh}"
+Cohesive energy (eV) = -6.6347091952177
+
+variable Volume equal vol
+variable Mass equal mass(all)
+variable Density equal ${Mass}/${Volume}
+variable Density equal 233533.439999988/${Volume}
+variable Density equal 233533.439999988/59914.0368423079
+#variable K equal -(v_PXX+v_PYY+v_PZZ)/3 # bulk modulus K
+#variable SoundSpeed equal sqrt(${K}/${Density}) # Speed of sound c = sqrt(K/Density)
+
+print "Volume = ${Volume} A^3"
+Volume = 59914.0368423079 A^3
+print "Mass = ${Mass} grams/mole"
+Mass = 233533.439999988 grams/mole
+print "Density = ${Density} g/cm^3"
+Density = 3.89780846539587 g/cm^3
+#print "bulk modulus = ${K} bars"
+#print "Sound Speed = ${SoundSpeed} m/s"
+
+
+fix			EquilibrationFix all print 1 "M3,164,1.0016035332910205,1.7348281644198345,1.6004477267115904,${teng},${natoms},${dist},${ecoh},${PXXo},${PYYo},${PZZo},${Volume},${Mass},${Density}" screen no title "Potential,Num,A1X,A2Y,A3Z,TotalEnergy,NumberOfAtoms,LatticeConstant,CohesiveEnergy,PressureX,PressureY,PressureZ,Volume,Mass,Density" file D:\Queens_University\Project\Zr\Equilibrium\Mapping/M3/Equilibrium.csv
+
+#------------------------------Run-------------------------
+run			0
+WARNING: No fixes with time integration, atoms won't move (src/verlet.cpp:60)
+Per MPI rank memory allocation (min/avg/max) = 7.242 | 7.242 | 7.242 Mbytes
+   Step         PotEng           Lx             Ly             Lz           Press           Pxx            Pyy            Pzz          c_eatoms   
+        12  -16984.856      32.340554      44.812384      41.3412        6.7473962e-06 -0.016269802    0.00089940465  0.015390639   -16984.856    
+Loop time of 1e-06 on 1 procs for 0 steps with 2560 atoms
+
+0.0% CPU use with 1 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 0          | 0          | 0          |   0.0 |  0.00
+Bond    | 0          | 0          | 0          |   0.0 |  0.00
+Neigh   | 0          | 0          | 0          |   0.0 |  0.00
+Comm    | 0          | 0          | 0          |   0.0 |  0.00
+Output  | 0          | 0          | 0          |   0.0 |  0.00
+Modify  | 0          | 0          | 0          |   0.0 |  0.00
+Other   |            | 1e-06      |            |       |100.00
+
+Nlocal:           2560 ave        2560 max        2560 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Nghost:           5639 ave        5639 max        5639 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Neighs:         186880 ave      186880 max      186880 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 186880
+Ave neighs/atom = 73
+Ave special neighs/atom = 0
+Neighbor list builds = 0
+Dangerous builds = 0
+
+#------------------------------Restor-------------------------
+unfix EquilibrationFix
+
+#****************************************************************************
+#FinishingReport
+#****************************************************************************
+print "~~~~~~~~~~FinishingReport"
+~~~~~~~~~~FinishingReport
+
+
+print "All done!"
+All done!
+Total wall time: 0:00:00
