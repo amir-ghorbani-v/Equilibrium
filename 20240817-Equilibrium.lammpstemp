@@ -130,7 +130,7 @@ print "Density = ${Density} g/cm^3"
 #print "Sound Speed = ${SoundSpeed} m/s"
 
 
-fix			EquilibrationFix all print 1 "PotTemp,NumTemp,BoxXTemp,BoxYTemp,BoxZTemp,${teng},${natoms},${dist},${ecoh},${PXXo},${PYYo},${PZZo},${Volume},${Mass},${Density}" screen no title "Potential,Num,A1X,A2Y,A3Z,TotalEnergy,NumberOfAtoms,LatticeConstant,CohesiveEnergy,PressureX,PressureY,PressureZ,Volume,Mass,Density" file DirectoryTemp/Equilibrium.csv
+fix			EquilibrationFix all print 1 "PotentialTemp,NumTemp,BoxXTemp,BoxYTemp,BoxZTemp,${teng},${natoms},${dist},${ecoh},${PXXo},${PYYo},${PZZo},${Volume},${Mass},${Density}" screen no title "Potential,Num,A1X,A2Y,A3Z,TotalEnergy,NumberOfAtoms,LatticeConstant,CohesiveEnergy,PressureX,PressureY,PressureZ,Volume,Mass,Density" file DirectoryTemp/Equilibrium.csv
 
 #------------------------------Run-------------------------
 run			0
