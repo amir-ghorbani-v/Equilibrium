@@ -7,7 +7,7 @@ Date = "20240817"
 # <editor-fold desc="######################################## OPTIONS">
 print("######################################## OPTIONS")
 
-PotentialName = "TabGap2"
+PotentialName = "BMD192R"
 
 # <editor-fold desc="**********  Library">
 print("**********  Library")
@@ -62,7 +62,7 @@ print(platform.system())
 # SimulationEnvironement = "ComputeCanada"
 
 if platform.system() == "Windows":
-    SimulationEnvironement = "MyPc"
+    SimulationEnvironment = "Windows"
 
     CurrentDirectory = os.getcwd()
     OriginalPotentialAddress = "D:/Queens_University/Project/Zr/PotentialBank/Eam/BMD192/" + PotentialName + ".eampot"
@@ -98,7 +98,7 @@ if platform.system() == "Windows":
     # </editor-fold>
 
 elif platform.system() == "Linux":
-    SimulationEnvironement = "ComputeCanada"
+    SimulationEnvironment = "Linux"
 
     CurrentDirectory = os.getcwd()
     OriginalPotentialAddress = "/home/veshand/Zr/PotentialBank/Eam/Mendelev/" + PotentialName + ".eampot"
@@ -121,7 +121,7 @@ StageName = "Options"
 EosTemplate = "20240214-Eos.lammpstemp"
 QsdTemplate = "20240216-Qsd"
 MinimizeMaxiter = 10000
-MinimizeTol = 1e-1
+MinimizeTol = 1e-6
 
 Date = "20240304"
 Date = "20240228"
@@ -676,7 +676,7 @@ class ConvergedEarly(Exception):
     """Custom exception to stop optimization early when convergence criteria are met."""
     pass
 
-def EquilibriumFunc(Input_V,Pot_V,Directory_V):
+def EquilibriumFunc(Input_V,Pot_V,Directory_V,Basis_V):
     global Num
     LammpsTempFileAddress = "20240817-Equilibrium.lammpstemp"
     LammpsInFileAddress = Directory_V + "/" + "20240817-Equilibrium-" + str(Num) + ".lammpsin"
@@ -693,12 +693,11 @@ def EquilibriumFunc(Input_V,Pot_V,Directory_V):
             line = line.replace("BoxZTemp", str(Input_V[2]))
             print(line, end="")
 
-    Type = "RunWindows"
-    if Type=="RunWindows":
+    if SimulationEnvironment=="Windows":
         LammpsArgs = ["-screen", LammpsScreen]
         lmp = lammps(cmdargs=LammpsArgs)
         lmp.file(LammpsInFileAddress)
-    elif Type=="RunBash":
+    elif SimulationEnvironment=="Linux":
         import subprocess
         if Pot_V in ["M2", "M3", "BMD192", "M2R", "M3R", "BMD192R"]:
             srun_command = [
@@ -732,28 +731,35 @@ def EquilibriumFunc(Input_V,Pot_V,Directory_V):
     PressureX = EquilibriumReport["PressureX"].iloc[0]
     PressureY = EquilibriumReport["PressureY"].iloc[0]
     PressureZ = EquilibriumReport["PressureZ"].iloc[0]
-
+    PressureSum = abs(PressureX) + abs(PressureY) + abs(PressureZ)
     # print(PressureX)
     # print(PressureY)
     # print(PressureZ)
-    PressureSum = abs(PressureX) + abs(PressureY) + abs(PressureZ)
+    TotalEnergy = EquilibriumReport["TotalEnergy"].iloc[0]
+    CohesiveEnergy = EquilibriumReport["CohesiveEnergy"].iloc[0]
+
     # print(PressureSum)
     Num += 1
 
     # <editor-fold desc="Save">
     global IterationDf
-    print(str(Num), str(Input_V[0]), str(Input_V[1]), str(Input_V[2]))
+    print("Num", "BoxX", "BoxX", "BoxZ", "PressureX", "PressureY", "PressureZ", "PressureSum", "TotalEnergy", "CohesiveEnergy")
+    print(str(Num), str(Input_V[0]), str(Input_V[1]), str(Input_V[2]), PressureX, PressureY, PressureZ, PressureSum, TotalEnergy, CohesiveEnergy)
     IterationNew = pd.DataFrame({'Num': [Num], 'A1X': [Input_V[0]], 'A2Y': [Input_V[1]], 'A3Z': [Input_V[2]],
-                                 'PressureX': [PressureX], 'PressureY': [PressureY], 'PressureZ': [PressureZ],
-                                 'PressureSum': [PressureSum]})
+                                 'PressureX': [PressureX], 'PressureY': [PressureY], 'PressureZ': [PressureZ], 'PressureSum': [PressureSum],
+                                 'TotalEnergy': [TotalEnergy], 'CohesiveEnergy': [CohesiveEnergy]
+                                 })
     IterationNew["Potential"] = Pot
     IterationDf = pd.concat((IterationDf, IterationNew), ignore_index=True)
     # </editor-fold>
 
-    if abs(PressureX) < 1 and abs(PressureY) < 1 and abs(PressureZ) < 1:
-        raise ConvergedEarly("All pressures below 1000")
+    if Basis_V == "Pressure":
+        if abs(PressureX) < 1 and abs(PressureY) < 1 and abs(PressureZ) < 1:
+            raise ConvergedEarly("All pressures below 1000")
+        return PressureSum
+    elif Basis_V == "Energy":
+        return CohesiveEnergy
 
-    return PressureSum
 # </editor-fold>
 
 # <editor-fold desc="add_boundary_knots">
@@ -5850,7 +5856,7 @@ print("######################################## Minimization")
 # <editor-fold desc="**********  Calculation">
 print("**********  Calculation")
 BoxInitial = np.array([1.0075297558814176,1.7449947231182081,1.6011318128690157])
-PotList = ["M2","M2R","M3","M3R","BMD192","BMD192R"] # ["M2","M2R","M3","M3R","BMD192","BMD192R"]
+PotList = ["BMD192R"] # ["M2","M2R","M3","M3R","BMD192","BMD192R"]
 EquilibriumDf = pd.DataFrame(columns=["Potential","Num","A1X","A2Y","A3Z","TotalEnergy","NumberOfAtoms","LatticeConstant","CohesiveEnergy",
                                       "PressureX","PressureY","PressureZ",
                                       "Volume","Mass","Density"])
@@ -5873,7 +5879,8 @@ if Active:
 
         Arguments = (
             Pot,
-            Directory
+            Directory,
+            "Energy"
         )
 
         pressure_sums = []
@@ -5885,7 +5892,6 @@ if Active:
         #     IterationNew = pd.DataFrame({'Num': [Num], 'X': [Input_V[0]], 'Y': [Input_V[1]], 'Z': [Input_V[2]]})
         #     IterationNew["Potential"] = Pot
         #     IterationDf = pd.concat((IterationDf, IterationNew), ignore_index=True)
-
 
         Num = 0
         try:
